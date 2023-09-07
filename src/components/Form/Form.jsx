@@ -1,61 +1,55 @@
-import { nanoid } from 'nanoid';
-import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact } from 'components/redux/contactsSlice';
+import css from './Form.module.css';
 
-import useLocalStorage from '../hooks/useLocalStorage';
+export const Form = () => {
+  const contacts = useSelector(state => state.contacts);
 
-export function Form({ onSubmit }) {
-  const [name, setName] = useLocalStorage('name', '');
-  const [number, setNumber] = useLocalStorage('number', '');
+  // Получаем ссылку на функцию отправки экшенов
+  const dispatch = useDispatch();
 
-  const handleInputChange = evt => {
-    // evt.preventDefault();
-    const { name, value } = evt.target;
-
-    switch (name) {
-      case 'name':
-        setName(value);
-        break;
-      case 'number':
-        setNumber(value);
-        break;
-      default:
-        return;
-    }
-  };
-
-  function btnClickAddContact(evt) {
+  const btnClickAddContact = evt => {
     evt.preventDefault();
+
+    const { name, number } = evt.target;
+    const nameInput = name.value.trim();
+    const numberInput = number.value.trim();
+
     //Якщо обидва Інпути заповнені
-    if (!name || !number) {
+    if (!nameInput || !numberInput) {
       return;
     }
 
-    //Записуємо новий контакт
-    const newContact = {
-      name: name,
-      number: number,
-      id: nanoid(),
-    };
-    console.log('newContact=', newContact);
+    if (nameInput !== '') {
+      // Пошук елемента по унікальному значенню name в масиві сontacts
+      if (
+        contacts.find(option =>
+          option.name
+            ? option.name.toLowerCase() === nameInput.toLowerCase()
+            : ''
+        )
+      ) {
+        alert(`${nameInput} is already in contacts.`);
+        name.value = '';
+        number.value = '';
+        return;
+      }
+    }
 
-    onSubmit(newContact);
-
-    // Видаляємо із Input поточні дані, очищуємо після Submit
-    setName('');
-    setNumber('');
-  }
+    // Отправляем результат - экшен создания задачи
+    // Вызываем генератор экшена и передаем текст задачи для поля payload
+    dispatch(addContact(nameInput, numberInput));
+  };
 
   return (
-    <form>
+    <form onSubmit={btnClickAddContact} className={css.form}>
       <label>
         Name
         <input
           type="text"
-          onChange={handleInputChange}
           name="name"
-          value={name}
           pattern="^[a-zA-Zа-яА-Я]+(([' \-][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
+          title="Name may contain only letters. For example Adrian de Castelmore"
           required
         />
       </label>
@@ -64,25 +58,14 @@ export function Form({ onSubmit }) {
         Number
         <input
           type="tel"
-          onChange={handleInputChange}
           name="number"
-          value={number}
           pattern="\+?\d{1,4}?[ .\-\s]?\(?\d{1,3}?\)?[ .\-\s]?\d{1,4}[ .\-\s]?\d{1,4}[ .\-\s]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
           required
         />
       </label>
 
-      <button
-        type="submit"
-        onClick={btnClickAddContact}
-      >
-        Add contact
-      </button>
+      <button type="submit">Add contact</button>
     </form>
   );
-}
-
-Form.propTypes = {
-  onChange: PropTypes.func,
 };

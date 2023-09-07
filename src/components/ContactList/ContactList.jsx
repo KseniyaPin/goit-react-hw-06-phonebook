@@ -1,12 +1,39 @@
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 
-export const ContactList = ({ contacts, onDelete }) => {
+import { deleteContact } from 'components/redux/contactsSlice';
+
+export const ContactList = () => {
+  const dispatch = useDispatch();
+
+  // Получаем массив Контактов и Фильтр из состояния Redux
+  const filter = useSelector(state => state.filter);
+  const contacts = useSelector(state => state.contacts);
+
+  // Вычисляем массив задач которые необходимо отображать в интерфейсе
+  const visibleContacts = selectVisibleContacts(contacts);
+
+  function selectVisibleContacts(contacts) {
+    return contacts
+      ? contacts.filter(contact => {
+          const contactName = contact.name
+            ? contact.name.toLowerCase().includes(filter.toLowerCase())
+            : '';
+          return contactName;
+        })
+      : [];
+  }
+
+  const handlDeleteContact = evt => {
+    dispatch(deleteContact(evt.currentTarget.id));
+  };
+
   return (
     <>
       <ul>
-        {contacts.map(({ id, name, number }) => {
+        {visibleContacts.map(({ name, number, id }) => {
           return (
-            <li key={id} id={id} onClick={onDelete}>
+            <li key={id} id={id} onClick={handlDeleteContact}>
               {name}: {number}
               <button type="button">Delete</button>
             </li>
@@ -18,6 +45,6 @@ export const ContactList = ({ contacts, onDelete }) => {
 };
 
 ContactList.propTypes = {
-  contacts: PropTypes.arrayOf(PropTypes.object),
-  onDelete: PropTypes.func,
+  contacts: PropTypes.array,
+  deleteContact: PropTypes.func,
 };
