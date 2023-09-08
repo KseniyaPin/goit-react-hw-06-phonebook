@@ -35,10 +35,13 @@ export const Form = () => {
         return;
       }
     }
-
+    
     // Отправляем результат - экшен создания задачи
     // Вызываем генератор экшена и передаем текст задачи для поля payload
     dispatch(addContact(nameInput, numberInput));
+    
+    name.value = '';
+    number.value = '';
   };
 
   return (
